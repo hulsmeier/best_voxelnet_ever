@@ -16,7 +16,7 @@ from utils.kitti_loader import iterate_data, sample_test_data
 
 
 parser = argparse.ArgumentParser(description='testing')
-parser.add_argument('-n', '--tag', type=str, nargs='?', default='pre_trained_car',
+parser.add_argument('-n', '--tag', type=str, nargs='?', default='pre_trained_pedestrian',
                     help='set log tag')
 parser.add_argument('-d', '--decrease', type=bool, nargs='?', default=False,
                     help='set the flag to True if decrease model')
