@@ -7,6 +7,10 @@ import os
 import time
 import tensorflow as tf
 import sys
+import boto3
+import os
+import logging
+from botocore.exceptions import ClientError
 
 from config import cfg
 from model import RPN3D
@@ -49,6 +53,22 @@ save_model_dir = os.path.join('.', 'save_model', args.tag)
 os.makedirs(log_dir, exist_ok=True)
 os.makedirs(res_dir, exist_ok=True)
 os.makedirs(save_model_dir, exist_ok=True)
+
+def upload_file(file_name, bucket, object_name=None):
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Upload the file
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
+
 
 def main(_):
     
@@ -166,6 +186,10 @@ def main(_):
 
             # finally save model
             model.saver.save(sess, os.path.join(save_model_dir, 'checkpoint'), global_step=model.global_step)
+
+            for root, dirs, files in os.walk("save_model/default"):
+                for file in files:
+                    upload_file(os.path.join(root,file), "kittidata", file)
 
 
 if __name__ == '__main__':
