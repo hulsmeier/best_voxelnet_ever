@@ -22,7 +22,7 @@ __C.DATA_DIR = osp.abspath(osp.join(os.sep, 'workspace', 'best_voxelnet_ever', '
 
 
 # for gpu allocation
-__C.GPU_AVAILABLE = '0,1,2,3'
+__C.GPU_AVAILABLE = '0'
 __C.GPU_USE_COUNT = len(__C.GPU_AVAILABLE.split(','))
 __C.GPU_MEMORY_FRACTION = 1
 

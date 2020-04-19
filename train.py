@@ -61,7 +61,7 @@ def upload_file(file_name, bucket, object_name=None):
         object_name = file_name
 
     # Upload the file
-    s3_client = boto3.client('s3')
+    s3_client = boto3.client('s3', aws_access_key_id="AKIAJDDXAITQ264WWKJQ", aws_secret_access_key="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")
     try:
         response = s3_client.upload_file(file_name, bucket, object_name)
     except ClientError as e:
@@ -164,6 +164,10 @@ def main(_):
                 sess.run(model.epoch_add_op)
                 
                 model.saver.save(sess, os.path.join(save_model_dir, 'checkpoint'), global_step=model.global_step)
+
+                for root, dirs, files in os.walk("save_model/default"):
+                    for file in files:
+                        upload_file(os.path.join(root,file), "kittidata", file)
         
                 # dump test data every 10 epochs
                 if (epoch + 1) % 10 == 0:
