@@ -39,6 +39,17 @@ class Processor:
         return ret
 
 
+class ProcessorLive:
+    def __init__(self, f_lidar):
+        self.f_lidar = f_lidar
+    
+    def __call__(self,load_index):
+        raw_lidar = np.frombuffer(self.f_lidar, dtype=np.float32).reshape((-1, 4))
+        voxel = process_pointcloud(raw_lidar)
+        ret = [raw_lidar, voxel]
+        return ret
+
+
 
 def iterate_data(data_dir, shuffle=False, aug=False, is_testset=False, batch_size=1, multi_gpu_sum=1):
     f_rgb = glob.glob(os.path.join(data_dir, 'image_2', '*.png'))
@@ -197,6 +208,35 @@ def sample_single_data(data_dir, data_tag):
     
     return ret
 
+
+def sample_data_live(f_lidar):
+
+    indices = list(range(1))
+    
+    proc_dat = ProcessorLive(f_lidar)
+    
+    excerpts = indices[0:1]
+    
+    rets = []
+    for excerpt in excerpts:
+        rets.append(proc_dat(excerpt))
+   
+    raw_lidar = [ ret[0] for ret in rets ]
+    voxel = [ ret[1] for ret in rets ]
+    
+    vox_feature, vox_number, vox_coordinate = [], [], []
+    _, per_vox_feature, per_vox_number, per_vox_coordinate = build_input(voxel[0:1])
+    vox_feature.append(per_vox_feature)
+    vox_number.append(per_vox_number)
+    vox_coordinate.append(per_vox_coordinate)
+    
+    ret = (
+           np.array(vox_feature),
+           np.array(vox_number),
+           np.array(vox_coordinate),
+           )
+    
+    return ret
 
 
 def build_input(voxel_dict_list):

@@ -322,6 +322,53 @@ class RPN3D(object):
 
         return tag, ret_box3d_score
 
+    def predict_step_live(self, session, data):
+
+        vox_feature = data[0]
+        vox_number = data[1]
+        vox_coordinate = data[2]
+
+        print('predicting...')
+        input_feed = {}
+        input_feed[self.is_train] = False
+        for idx in range(len(self.avail_gpus)):
+            input_feed[self.vox_feature[idx]] = vox_feature[idx]
+            input_feed[self.vox_number[idx]] = vox_number[idx]
+            input_feed[self.vox_coordinate[idx]] = vox_coordinate[idx]
+
+        output_feed = [self.prob_output, self.delta_output]
+        probs, deltas = session.run(output_feed, input_feed)
+        # BOTTLENECK
+        batch_boxes3d = delta_to_boxes3d(deltas, self.anchors, coordinate='lidar')
+        batch_boxes2d = batch_boxes3d[:, :, [0, 1, 4, 5, 6]]
+        batch_probs = probs.reshape((len(self.avail_gpus) * self.single_batch_size, -1))
+        # NMS
+        ret_box3d = []
+        ret_score = []
+        for batch_id in range(len(self.avail_gpus) * self.single_batch_size):
+            # remove box with low score
+            ind = np.where(batch_probs[batch_id, :] >= cfg.RPN_SCORE_THRESH)[0]
+            tmp_boxes3d = batch_boxes3d[batch_id, ind, ...]
+            tmp_boxes2d = batch_boxes2d[batch_id, ind, ...]
+            tmp_scores = batch_probs[batch_id, ind]
+
+            # TODO: if possible, use rotate NMS
+            boxes2d = corner_to_standup_box2d(center_to_corner_box2d(tmp_boxes2d, coordinate='lidar'))
+            ind = session.run(self.box2d_ind_after_nms,
+                    {self.boxes2d: boxes2d,
+                     self.boxes2d_scores: tmp_scores})
+            tmp_boxes3d = tmp_boxes3d[ind, ...]
+            tmp_scores = tmp_scores[ind]
+            ret_box3d.append(tmp_boxes3d)
+            ret_score.append(tmp_scores)
+
+        ret_box3d_score = []
+        for boxes3d, scores in zip(ret_box3d, ret_score):
+            ret_box3d_score.append(np.concatenate([np.tile(self.cls, len(boxes3d))[:, np.newaxis],
+                                                   boxes3d, scores[:, np.newaxis]], axis=-1))
+
+
+        return ret_box3d_score
 
     def save_frozen_graph(self, session, output_path):
         """

@@ -18,7 +18,7 @@ __C = edict()
 cfg = __C
 
 # for dataset dir
-__C.DATA_DIR = osp.abspath(osp.join(os.sep, 'workspace', 'best_voxelnet_ever', 'data', 'object'))
+__C.DATA_DIR = osp.abspath(osp.join(os.sep, 'Documents', 'Github', 'best_voxelnet_ever', 'data', 'object'))
 
 
 # for gpu allocation
