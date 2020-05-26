@@ -7,6 +7,7 @@ import os
 import time
 import tensorflow as tf
 import socket
+import struct
 
 from config import cfg
 from model import RPN3D
@@ -111,9 +112,11 @@ def main(_):
 
                             results = model.predict_step_live(sess, batch)
             
-                            for result in zip(results):
-                                labels = box3d_to_label([result[:, 1:8]], [result[:, 0]], [result[:, -1]], coordinate='lidar')[0]
-                                print('write out {} objects'.format(len(labels)))
+                            #for result in zip(results):
+                            #    labels = box3d_to_label([result[:, 1:8]], [result[:, 0]], [result[:, -1]], coordinate='lidar')[0]
+                            #    print('write out {} objects'.format(len(labels)))
+
+                            print('write out {} objects'.format(len(results)))
 
                             break
 

@@ -45,8 +45,9 @@ class ProcessorLive:
     
     def __call__(self,load_index):
         raw_lidar = np.frombuffer(self.f_lidar, dtype=np.float32).reshape((-1, 4))
-        voxel = process_pointcloud(raw_lidar)
-        ret = [raw_lidar, voxel]
+        raw_lidar2 = np.copy(raw_lidar)
+        voxel = process_pointcloud(raw_lidar2)
+        ret = [raw_lidar2, voxel]
         return ret
 
 
